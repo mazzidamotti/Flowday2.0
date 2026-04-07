@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1"/>
+<title>Flowday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#F5F4F0;--surface:#FFF;--surface2:#EFEDE8;
+  --border:rgba(0,0,0,.08);--border-s:rgba(0,0,0,.15);
+  --text:#1A1917;--text2:#6B6860;--text3:#A8A69F;
+  --seg:#534AB7;--seg-bg:#EEEDFE;--seg-bd:#CECBF6;
+  --scu:#185FA5;--scu-bg:#EBF3FC;--scu-bd:#C4DCFA;
+  --pol:#C53030;--pol-bg:#FFF0F0;--pol-bd:#FED7D7;
+  --usi:#92670A;--usi-bg:#FEF9E7;--usi-bd:#F9E49A;
+  --alt:#276749;--alt-bg:#EDFAF3;--alt-bd:#C6F0DC;
+  --red:#C53030;--red-bg:#FFF0F0;--red-bd:#FED7D7;
+  --green:#276749;--green-bg:#EDFAF3;
+  --amber:#92400E;--amber-bg:#FFFBEB;--amber-bd:#FDE68A;
+  --r:10px;--rlg:16px;--rf:999px;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+#root{display:flex;justify-content:center}
+.phone{width:100%;max-width:420px;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative}
+@media(min-width:420px){.phone{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes barGrow{from{width:0%}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes toastIn{from{opacity:0;transform:translateY(5px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.fu{animation:fadeUp .35s var(--ease) both}
+.fu1{animation:fadeUp .35s .05s var(--ease) both}
+.fu2{animation:fadeUp .35s .1s var(--ease) both}
+.fu3{animation:fadeUp .35s .15s var(--ease) both}
+.fu4{animation:fadeUp .35s .2s var(--ease) both}
+.fu5{animation:fadeUp .35s .25s var(--ease) both}
+.fu6{animation:fadeUp .35s .3s var(--ease) both}
+.scroll{flex:1;overflow-y:auto;padding:0 0 110px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+.topbar{padding:52px 18px 14px;display:flex;justify-content:space-between;align-items:flex-start}
+.greeting{font-size:25px;font-weight:500;letter-spacing:-.4px;line-height:1.1}
+.dateline{font-size:13px;color:var(--text2);margin-top:3px;font-weight:300}
+.load-badge{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:5px 11px;border-radius:var(--rf);border:1px solid;flex-shrink:0;transition:all .3s var(--ease);cursor:default}
+.load-dot{width:6px;height:6px;border-radius:50%}
+.ical-row{margin:0 16px 16px;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;align-items:center;gap:10px;cursor:pointer;transition:opacity .15s}
+.ical-row:active{opacity:.7}
+.ical-ico{width:32px;height:32px;border-radius:8px;background:var(--scu-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ical-info{flex:1}
+.ical-t{font-size:13px;font-weight:500}
+.ical-s{font-size:11px;color:var(--text3);margin-top:1px}
+.ical-btn{font-size:11px;font-weight:500;color:var(--scu);background:var(--scu-bg);border:none;border-radius:var(--rf);padding:4px 10px;cursor:pointer;font-family:var(--font);white-space:nowrap}
+.sec{padding:0 16px;margin-bottom:22px}
+.sec-lbl{font-size:10px;font-weight:500;letter-spacing:.1em;color:var(--text3);margin-bottom:9px;font-family:var(--mono)}
+.cal-item{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:5px}
+.cal-time{font-size:11px;color:var(--text3);font-family:var(--mono);min-width:38px}
+.cal-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.cal-name{font-size:14px;flex:1}
+.cal-dur{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.alert{display:flex;align-items:center;gap:9px;padding:10px 13px;background:var(--red-bg);border:1px solid var(--red-bd);border-left:3px solid var(--red);border-radius:0 var(--r) var(--r) 0;margin-bottom:5px}
+.alert-t{font-size:13px;color:var(--red);flex:1}
+.alert-m{font-size:11px;color:var(--red);opacity:.7;white-space:nowrap}
+.tc{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:5px;cursor:pointer;transition:opacity .15s;user-select:none}
+.tc:active{opacity:.75}
+.tc.done{opacity:.4}
+.chk{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border-s);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease);background:transparent}
+.chk.on{background:var(--green);border-color:var(--green);animation:pop .25s var(--ease)}
+.chk svg{opacity:0;transition:opacity .1s}.chk.on svg{opacity:1}
+.tb{flex:1;min-width:0}
+.tn{font-size:14px;line-height:1.3;transition:color .2s}
+.tc.done .tn{text-decoration:line-through;color:var(--text3)}
+.tf{display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap}
+.at{font-size:11px;font-weight:500;padding:2px 7px;border-radius:var(--rf)}
+.tag-seg{background:var(--seg-bg);color:var(--seg)}
+.tag-scu{background:var(--scu-bg);color:var(--scu)}
+.tag-pol{background:var(--pol-bg);color:var(--pol)}
+.tag-usi{background:var(--usi-bg);color:var(--usi)}
+.tag-alt{background:var(--alt-bg);color:var(--alt)}
+.tsb{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:13px 15px;margin-bottom:7px;cursor:pointer;transition:border-color .2s,transform .15s var(--ease);user-select:none}
+.pc:active{transform:scale(.99)}.pc:hover{border-color:var(--border-s)}
+.pt{display:flex;align-items:center;gap:7px;margin-bottom:11px}
+.pn{font-size:14px;font-weight:500;flex:1;letter-spacing:-.15px}
+.pp{font-size:14px;font-weight:500;font-family:var(--mono)}
+.bbg{height:6px;background:var(--surface2);border-radius:var(--rf);overflow:hidden;margin-bottom:9px}
+.bf{height:100%;border-radius:var(--rf);animation:barGrow .7s var(--ease) both}
+.pf{display:flex;justify-content:space-between;align-items:center}
+.psb{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.dlt{font-size:11px;font-weight:500;padding:3px 8px;border-radius:var(--rf)}
+.dl-ok{background:var(--green-bg);color:var(--green)}
+.dl-warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+.dl-late{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.dh{padding:52px 18px 0;display:flex;align-items:center;gap:11px;margin-bottom:18px}
+.bk{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text);transition:background .15s}
+.bk:hover{background:var(--surface2)}
+.dt{font-size:20px;font-weight:500;letter-spacing:-.3px;flex:1}
+.bpw{padding:0 18px;margin-bottom:20px}
+.bpr{display:flex;align-items:baseline;gap:9px;margin-bottom:7px}
+.bp{font-size:52px;font-weight:500;font-family:var(--mono);letter-spacing:-2px;line-height:1;transition:color .3s}
+.bpl{font-size:14px;color:var(--text2);font-weight:300}
+.bbgt{height:10px;background:var(--surface2);border-radius:var(--rf);overflow:hidden}
+.bbf{height:100%;border-radius:var(--rf);transition:width .5s var(--ease);animation:barGrow .8s var(--ease) both}
+.pm{display:flex;gap:7px;padding:0 16px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.ss{padding:0 16px}
+.si{display:flex;align-items:center;gap:9px;padding:12px 13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:5px;cursor:pointer;transition:opacity .2s;user-select:none}
+.si:active{opacity:.7}.si.ds{opacity:.4}
+.sc{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border-s);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease);background:transparent}
+.sc.on{animation:pop .22s var(--ease)}
+.sc svg{opacity:0;transition:opacity .1s}.sc.on svg{opacity:1}
+.sbd{flex:1;min-width:0}
+.sn{font-size:14px;transition:color .2s}
+.si.ds .sn{text-decoration:line-through;color:var(--text3)}
+.sm{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px}
+.asb{width:100%;margin-top:6px;padding:11px;background:var(--surface2);border:1px dashed var(--border-s);border-radius:var(--r);font-size:13px;color:var(--text3);cursor:pointer;font-family:var(--font);transition:background .15s}
+.asb:hover{background:var(--border)}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 0 22px;z-index:30}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--text3);cursor:pointer;padding:4px 18px;transition:color .15s;user-select:none}
+.ni.on{color:var(--text)}
+.nd{width:4px;height:4px;border-radius:50%;background:var(--text);margin:0 auto}
+.fab{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;border:none;border-radius:var(--rf);padding:13px 26px;font-size:14px;font-weight:500;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:7px;z-index:50;transition:transform .2s var(--ease),background .2s;white-space:nowrap;box-shadow:0 2px 14px rgba(0,0,0,.14)}
+.fab:active{transform:translateX(-50%) scale(.97)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:40;animation:fadeUp .2s ease both}
+.pnl{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:var(--surface);border-radius:var(--rlg) var(--rlg) 0 0;padding:18px 18px 36px;z-index:50;animation:fadeUp .25s var(--ease) both;border:1px solid var(--border);border-bottom:none}
+.pnl.scroll-pnl{max-height:88vh;overflow-y:auto;padding-bottom:40px}
+.hdl{width:34px;height:4px;background:var(--border-s);border-radius:var(--rf);margin:0 auto 16px}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.type-btn{padding:18px 10px;border:1.5px solid var(--border);border-radius:var(--rlg);background:var(--surface);cursor:pointer;font-family:var(--font);transition:all .15s;text-align:center}
+.type-btn:hover{border-color:var(--border-s)}
+.ti{font-size:26px;display:block;margin-bottom:8px}
+.tl{font-size:14px;font-weight:500;color:var(--text);display:block}
+.ts2{font-size:11px;color:var(--text3);display:block;margin-top:3px}
+.ir{display:flex;gap:7px;align-items:center;margin-bottom:11px}
+.ti2{flex:1;font-family:var(--font);font-size:15px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;outline:none;transition:border-color .15s}
+.ti2:focus{border-color:var(--border-s)}.ti2::placeholder{color:var(--text3)}
+.mic{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text2);transition:background .15s}
+.mic:hover{background:var(--border)}.mic.rec{background:var(--red-bg);border-color:var(--red-bd);color:var(--red)}
+.sb{background:var(--text);color:#fff;border:none;border-radius:var(--r);padding:10px 16px;font-size:14px;font-weight:500;font-family:var(--font);cursor:pointer;flex-shrink:0;transition:opacity .15s}
+.sb:active{opacity:.8}.sb:disabled{opacity:.35;cursor:default}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
+.chip{font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rf);padding:4px 10px;cursor:pointer;font-family:var(--font);transition:background .12s}
+.chip:hover{background:var(--border)}
+.ic{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 13px;margin-bottom:11px}
+.it{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.08em;font-family:var(--mono);margin-bottom:9px}
+.irow{display:flex;flex-wrap:wrap;gap:5px}
+.ich{display:flex;align-items:center;gap:5px;font-size:13px;padding:6px 11px;border-radius:var(--rf);border:1.5px solid var(--border-s);background:var(--surface);cursor:pointer;font-family:var(--font);color:var(--text);user-select:none;transition:all .12s}
+.ich:active{opacity:.7}.ich.ai::after{content:'✦';font-size:9px;opacity:.4;margin-left:2px}
+.fl{margin-bottom:13px}
+.fl label{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;display:block}
+.fi{width:100%;font-family:var(--font);font-size:14px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;outline:none;transition:border-color .15s}
+.fi:focus{border-color:var(--border-s)}.fi::placeholder{color:var(--text3)}
+.cg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cb{padding:8px 4px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface);cursor:pointer;font-family:var(--font);font-size:11px;font-weight:500;text-align:center;transition:all .12s}
+.sir{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.si2{flex:1;font-family:var(--font);font-size:13px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 11px;outline:none}
+.si2::placeholder{color:var(--text3)}.si2:focus{border-color:var(--border-s)}
+.sd{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 7px;outline:none;width:110px;flex-shrink:0}
+.sd:focus{border-color:var(--border-s)}
+.rm{width:28px;height:28px;border-radius:50%;border:none;background:none;cursor:pointer;color:var(--text3);font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .12s}
+.rm:hover{color:var(--red)}
+.ar{display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--text3);font-size:13px;padding:6px 0;user-select:none}
+.ar:hover{color:var(--text2)}
+.cr{display:flex;gap:7px;align-items:center;margin-top:4px}
+.cb2{flex:1;background:var(--text);color:#fff;border:none;border-radius:var(--r);padding:12px;font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;transition:opacity .15s}
+.cb2:active{opacity:.8}.cb2:disabled{opacity:.35;cursor:default}
+.bl{background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;font-size:14px;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:background .15s}
+.bl:active{background:var(--border)}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;display:flex;justify-content:space-between;align-items:center;animation:toastIn .22s var(--ease) both}
+.tl2{font-size:13px;color:var(--text)}
+.te{font-size:12px;color:var(--scu);cursor:pointer}
+.talbl{display:inline-block;font-size:11px;font-weight:500;padding:1px 7px;border-radius:var(--rf);margin-left:5px;vertical-align:middle}
+.hint{font-size:11px;color:var(--text3);margin-bottom:11px;font-family:var(--mono)}
+.mw{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;animation:fadeUp .2s ease both}
+.mo{width:100%;max-width:420px;background:var(--surface);border-radius:var(--rlg) var(--rlg) 0 0;padding:20px 20px 40px;border:1px solid var(--border);border-bottom:none}
+.mc{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);padding:11px;width:232px}
+.cn{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.cn button{background:none;border:none;cursor:pointer;color:var(--text2);font-size:16px;padding:2px 7px}
+.cn span{font-size:13px;font-weight:500}
+.cg2{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cdl{font-size:10px;text-align:center;color:var(--text3);font-family:var(--mono);padding:2px 0}
+.cd{width:100%;aspect-ratio:1;border:none;border-radius:6px;font-size:12px;cursor:pointer;background:none;color:var(--text);font-family:var(--font);transition:background .1s}
+.cd:disabled{opacity:.25;cursor:default}
+.cd.tod{background:var(--surface2);font-weight:500}
+.cd.sel{background:var(--text);color:#fff;font-weight:500}
+.tsw{background:var(--surface);border:1px solid var(--border-s);border-radius:var(--r);width:140px;overflow:hidden}
+.tsh{padding:6px 10px 5px;border-bottom:1px solid var(--border)}
+.tsh button{font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;font-family:var(--font)}
+.tsc{max-height:196px;overflow-y:auto}
+.tss{padding:9px 13px;font-size:13px;cursor:pointer;color:var(--text);font-family:var(--mono);border-bottom:1px solid var(--border);transition:background .1s}
+.tss:hover{background:var(--surface2)}.tss.sel{background:var(--surface2);font-weight:500}
+.tprev{font-size:15px;color:var(--text);margin-bottom:13px;line-height:1.3;padding:0 2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useRef,useEffect,useReducer} = React;
+const TODAY = new Date(2025,3,4);
+const CATS = [
+  {id:'seg',label:'Segretariato',color:'var(--seg)',bg:'var(--seg-bg)',bd:'var(--seg-bd)',icon:'📋'},
+  {id:'scu',label:'Scuola',color:'var(--scu)',bg:'var(--scu-bg)',bd:'var(--scu-bd)',icon:'📚'},
+  {id:'pol',label:'Politica',color:'var(--pol)',bg:'var(--pol-bg)',bd:'var(--pol-bd)',icon:'🏛'},
+  {id:'usi',label:'Politica USI',color:'var(--usi)',bg:'var(--usi-bg)',bd:'var(--usi-bd)',icon:'🏙'},
+  {id:'alt',label:'Altro',color:'var(--alt)',bg:'var(--alt-bg)',bd:'var(--alt-bd)',icon:'📌'},
+];
+const cat = id => CATS.find(c=>c.id===id)||CATS[3];
+const DURS = [null,'15 min','30 min','45 min','1h','1h 30min','2h'];
+const durMin = d => { if(!d) return 30; if(d.includes('h 30')) return parseInt(d)*60+30; if(d.includes('h')) return parseInt(d)*60; return parseInt(d); };
+const MO = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+const fmtD = d => { if(!d) return null; const t=new Date(TODAY); if(d.toDateString()===TODAY.toDateString()) return 'Oggi'; t.setDate(t.getDate()+1); if(d.toDateString()===t.toDateString()) return 'Domani'; return `${d.getDate()} ${MO[d.getMonth()]}`; };
+const dlSt = dl => { if(!dl) return 'ok'; const diff=(dl-TODAY)/86400000; if(diff<0) return 'late'; if(diff<=14) return 'warn'; return 'ok'; };
+const calcPct = ss => !ss.length ? 0 : Math.round(ss.filter(s=>s.done).length/ss.length*100);
+const pctCol = (p,a) => p===100 ? 'var(--green)' : cat(a).color;
+
+function calcLoad(tasks, calEvents) {
+  const work = (18-9)*60; // 540 min fascia 09-18
+  const fixed = calEvents.filter(e=>!e.personal).reduce((s,e)=>s+(e.dur||60),0);
+  const taskM = tasks.filter(t=>!t.done&&t.date instanceof Date&&t.date.toDateString()===TODAY.toDateString()).reduce((s,t)=>s+(t.durMin||30),0);
+  const occupied = fixed + taskM;
+  const r = work>0 ? occupied/work : 1;
+  const freeH = Math.max(0, Math.round((work-occupied)/6)/10);
+  if(r<=0.4) return {label:'Leggero',lvl:0,pct:Math.round(r*100),freeH};
+  if(r<=0.75) return {label:'Normale',lvl:1,pct:Math.round(r*100),freeH};
+  if(r<=1.0) return {label:'Carico',lvl:2,pct:Math.round(r*100),freeH};
+  return {label:'Sovraccarico',lvl:3,pct:Math.round(r*100),freeH:0};
+}
+
+function parseInput(text) {
+  const t=text.toLowerCase();
+  let area='alt';
+  if(/segretari|circolare|rimborso|verbale|ufficio|amministr/.test(t)) area='seg';
+  else if(/scuola|classe|lezione|prof|esame|materia|alunni|registro|studenti|verific/.test(t)) area='scu';
+  else if(/politica|consiglio|voto|campagna|assemblea|elezioni|partito|delibera/.test(t)) area='pol';
+  let dateObj=new Date(TODAY);
+  if(/domani/.test(t)) dateObj=new Date(2025,3,5);
+  else if(/lunedì|lunedi/.test(t)) dateObj=new Date(2025,3,7);
+  else if(/martedì|martedi/.test(t)) dateObj=new Date(2025,3,8);
+  else if(/mercoledì|mercoledi/.test(t)) dateObj=new Date(2025,3,9);
+  else if(/giovedì|giovedi/.test(t)) dateObj=new Date(2025,3,10);
+  else if(/venerdì|venerdi/.test(t)) dateObj=new Date(2025,3,11);
+  let time=null;
+  const tm=t.match(/alle\s+(\d{1,2})(?::(\d{2}))?/);
+  if(tm){const h=parseInt(tm[1]);if(h>=9&&h<=18)time=`${String(h).padStart(2,'0')}:${tm[2]||'00'}`;}
+  else if(/mattina/.test(t)) time='09:00';
+  else if(/pomeriggio/.test(t)) time='15:00';
+  let dur=null;
+  const dh=t.match(/(\d+)\s*(?:h|ore|ora)/);const dm2=t.match(/(\d+)\s*min/);
+  if(dh) dur=`${dh[1]}h`; else if(dm2) dur=`${dm2[1]} min`;
+  return {area,dateObj,time,dur};
+}
+
+// ─── CLASSIFICATORE EVENTI CALENDARIO ────────────────────────────────
+//
+// REGOLE IN CASCATA (la prima che scatta vince):
+//
+// 0. Calendario iCal: Segretariato/Scuola/Politica/Lavoro → CONTA sempre
+// 1. Parole chiave mediche → CONTA sempre (non si può non andarci)
+// 2. Parole chiave lavorative → CONTA
+// 3. Parole chiave personali → NON CONTA
+// 4. Orario serale (≥19:30) senza keyword lavorative → NON CONTA
+// 5. Default → CONTA (meglio sovrastimare)
+
+// Calendari iCal che contano sempre nel carico
+const CAL_WORK_NAMES = /segretariato|scuola|politica|lavoro|istituto|comune|regione/i;
+const CAL_PERSONAL_NAMES = /casa|personale|famiglia|privato|personal|altro/i;
+
+// Parole chiave mediche: contano SEMPRE (priorità assoluta)
+const MEDICAL_KW = /\b(medico|dottore|dottoressa|dentista|odontoiatra|ospedale|pronto soccorso|guardia medica|visita|visita medica|checkup|check-up|analisi|esami del sangue|radiografia|ecografia|tac|risonanza|fisioterapia|fisioterapista|psicologo|psichiatra|specialista|cardiologo|ortopedico|dermatologo|oculista|otorino|ginecologo|ambulatorio|clinica|poliambulatorio|vaccino|iniezione|operazione|intervento|ricovero|dimissioni)\b/i;
+
+// Parole chiave lavorative: contano nel carico
+const WORK_KW = /\b(riunione|meeting|call|videochiamata|videoconferenza|colloquio|lezione|supplenza|corso|formazione|aggiornamento|consiglio|assemblea|delibera|votazione|commissione|seduta|udienza|ricevimento|sportello|ufficio|cliente|fornitore|progetto|presentazione|scadenza|deadline|contratto|firma|sopralluogo|conferenza|convegno|seminario|workshop|inaugurazione|cerimonia ufficiale|comizio|dibattito|tavola rotonda|conferenza stampa|intervista|sopralluogo|ispezione)\b/i;
+
+// Parole chiave personali: NON contano nel carico
+const PERSONAL_KW = /\b(cena|pranzo|colazione|brunch|aperitivo|apericena|compleanno|anniversario|festa|party|amici|famiglia|mamma|papà|nonna|nonno|sorella|fratello|fidanzat|partner|moglie|marito|figlio|figlia|vacanza|ferie|riposo|pausa|relax|svago|divertimento|palestra|sport|allenamento|corsa|running|jogging|calcio|tennis|padel|nuoto|piscina|yoga|pilates|bici|ciclismo|escursione|trekking|cinema|teatro|concerto|spettacolo|museo|mostra|galleria|esposizione|spesa|supermercato|mercato|shopping|acquisti|parrucchiere|barbiere|estetista|manicure|pedicure|massaggio|spa|centro estetico|trattamento|viaggio|aeroporto|stazione|hotel|albergo|bed and breakfast|gita|weekend|uscita|serata|aperitivo)\b/i;
+
+function classifyEvent(name, time) {
+  const t = name.toLowerCase();
+
+  // 1. Medico → conta sempre, nessuna eccezione
+  if (MEDICAL_KW.test(t)) return false;
+
+  // 2. Parole chiave lavorative → conta
+  if (WORK_KW.test(t)) return false;
+
+  // 3. Parole chiave personali → non conta
+  if (PERSONAL_KW.test(t)) return true;
+
+  // 4. Orario serale ≥19:30 o notturno <7:00 → probabile personale
+  if (time) {
+    const [h, m] = time.split(':').map(Number);
+    const mins = h * 60 + (m || 0);
+    if (mins >= 19 * 60 + 30 || mins < 7 * 60) return true;
+  }
+
+  // 5. Default: lavorativo (meglio sovrastimare il carico)
+  return false;
+}
+
+function classifyFromCalendar(event) {
+  // Livello 0: calendario iCal riconosciuto → massima priorità
+  if (event.calendarName) {
+    if (CAL_WORK_NAMES.test(event.calendarName)) return false;  // conta
+    if (CAL_PERSONAL_NAMES.test(event.calendarName)) return true; // non conta
+  }
+  // Fallback: analisi per parola chiave + orario
+  return classifyEvent(event.name, event.time);
+}
+
+
+const INIT = {
+  screen:'home',activeProject:null,panelOpen:false,toastMsg:null,icalModal:false,icalUrl:'',
+  calEvents:[
+    {id:'c1',name:'Lezione di Storia',time:'09:00',dur:90,personal:false,calendarName:'Scuola'},
+    {id:'c2',name:'Consiglio di Istituto',time:'14:30',dur:60,personal:false,calendarName:'Politica'},
+    {id:'c3',name:'Cena con amici',time:'20:00',dur:120,personal:true,calendarName:'Personale'},
+    {id:'c4',name:'Visita cardiologo',time:'11:00',dur:60,personal:false},
+    {id:'c5',name:'Parrucchiere',time:'10:30',dur:45,personal:true},
+  ],
+  tasks:[
+    {id:1,name:'Circolare rimborso spese',area:'seg',durMin:20,time:null,date:new Date(TODAY),done:false,note:''},
+    {id:2,name:'Verifiche classe 3A',area:'scu',durMin:45,time:'11:00',date:new Date(TODAY),done:false,note:'Portare i test già corretti'},
+    {id:3,name:'Preparare ordine del giorno',area:'pol',durMin:30,time:null,date:new Date(TODAY),done:false,note:''},
+  ],
+  overdue:[{id:10,name:'Rispondere email Prof. Bianchi',area:'scu',since:'ieri'}],
+  projects:[
+    {id:'p1',name:'Bilancio preventivo 2025',area:'seg',deadline:new Date(2025,4,15),steps:[
+      {id:'s1',name:'Raccolta dati spese 2024',done:true,date:null,time:null},
+      {id:'s2',name:'Analisi entrate correnti',done:true,date:null,time:null},
+      {id:'s3',name:'Stima spese fisse',done:true,date:null,time:null},
+      {id:'s4',name:'Stima spese variabili',done:true,date:null,time:null},
+      {id:'s5',name:'Verifica con revisore',done:true,date:null,time:null},
+      {id:'s6',name:'Bozza documento finale',done:false,date:new Date(2025,3,14),time:'10:00'},
+      {id:'s7',name:'Approvazione consiglio',done:false,date:new Date(2025,3,28),time:null},
+      {id:'s8',name:'Pubblicazione',done:false,date:new Date(2025,4,2),time:null},
+    ]},
+    {id:'p2',name:'Programma scolastico Q2',area:'scu',deadline:new Date(2025,3,10),steps:[
+      {id:'s21',name:'Pianificazione lezioni',done:true,date:null,time:null},
+      {id:'s22',name:'Calendario verifiche',done:true,date:null,time:null},
+      {id:'s23',name:'Preparazione materiali',done:true,date:null,time:null},
+      {id:'s24',name:'Comunicazioni famiglie',done:false,date:new Date(2025,3,7),time:'09:00'},
+      {id:'s25',name:'Recupero studenti',done:false,date:new Date(2025,3,9),time:null},
+      {id:'s26',name:'Valutazioni finali',done:false,date:new Date(2025,3,10),time:null},
+    ]},
+    {id:'p3',name:'Campagna elettorale primavera',area:'pol',deadline:null,steps:[
+      {id:'s31',name:'Messaggi chiave definiti',done:true,date:null,time:null},
+      {id:'s32',name:'Materiali grafici',done:true,date:null,time:null},
+      {id:'s33',name:'Calendario eventi',done:true,date:null,time:null},
+      {id:'s34',name:'Coordinamento volontari',done:true,date:null,time:null},
+      {id:'s35',name:'Comunicazione social',done:false,date:new Date(2025,3,8),time:'15:00'},
+      {id:'s36',name:'Ufficio stampa',done:false,date:new Date(2025,3,11),time:null},
+      {id:'s37',name:'Evento finale',done:false,date:new Date(2025,4,1),time:null},
+    ]},
+  ]
+};
+
+function reducer(state,a){
+  switch(a.type){
+    case 'TOGGLE_TASK': return {...state,tasks:state.tasks.map(t=>t.id===a.id?{...t,done:!t.done}:t)};
+    case 'TOGGLE_STEP': return {...state,projects:state.projects.map(p=>p.id!==a.pid?p:{...p,steps:p.steps.map(s=>s.id===a.sid?{...s,done:!s.done}:s)})};
+    case 'ADD_STEP': return {...state,projects:state.projects.map(p=>p.id!==a.pid?p:{...p,steps:[...p.steps,{id:'s'+Date.now(),name:a.name,done:false,date:a.date,time:a.time}]})};
+    case 'OPEN_PROJECT': return {...state,screen:'project',activeProject:a.id,panelOpen:false};
+    case 'BACK_HOME': return {...state,screen:'home',activeProject:null};
+    case 'SET_SCREEN': return {...state,screen:a.screen,activeProject:null};
+    case 'TOGGLE_PANEL': return {...state,panelOpen:!state.panelOpen,toastMsg:null};
+    case 'CLOSE_PANEL': return {...state,panelOpen:false};
+    case 'ADD_TASK': {
+      const t={id:Date.now(),name:a.name,area:a.area,durMin:durMin(a.dur),time:a.time,date:a.dateObj,done:false,note:a.note||''};
+      return {...state,panelOpen:false,tasks:[...state.tasks,t],toastMsg:{name:a.name,area:a.area,date:fmtD(a.dateObj),time:a.time}};
+    }
+    case 'ADD_PROJECT': {
+      const p={id:'p'+Date.now(),name:a.name,area:a.area,deadline:a.deadline,note:a.note||'',
+        steps:a.steps.filter(s=>s.name.trim()).map((s,i)=>({id:'s'+Date.now()+i,name:s.name,done:false,date:s.date||null,time:s.time||null}))};
+      return {...state,panelOpen:false,projects:[...state.projects,p],toastMsg:{name:a.name,area:a.area,date:null,time:null,isProj:true}};
+    }
+    case 'CLEAR_TOAST': return {...state,toastMsg:null};
+    case 'OPEN_ICAL': return {...state,icalModal:true};
+    case 'CLOSE_ICAL': return {...state,icalModal:false};
+    case 'SET_ICAL_URL': return {...state,icalUrl:a.url};
+    case 'SAVE_ICAL': return {...state,icalModal:false,calEvents:[...state.calEvents,...a.events.map(e=>({...e,personal:classifyFromCalendar(e)}))]};
+    case 'SET_NOTE': return {...state,tasks:state.tasks.map(t=>t.id===a.id?{...t,note:a.note}:t)};
+    case 'SET_PROJ_NOTE': return {...state,projects:state.projects.map(p=>p.id===a.id?{...p,note:a.note}:p)};
+    case 'TOGGLE_CAL_PERSONAL': return {...state,calEvents:state.calEvents.map(e=>e.id===a.id?{...e,personal:!e.personal,manualOverride:true}:e)};
+    default: return state;
+  }
+}
+
+// ICONS
+const ChkI = ()=><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const BkI = ()=><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const MI = ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.5"/><path d="M5 10a7 7 0 0014 0M12 19v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>;
+const HI = ({on})=><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H5a1 1 0 01-1-1V10.5z" stroke="currentColor" strokeWidth="1.4" fill={on?"currentColor":"none"} strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const PI = ({on})=><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.4" fill={on?"currentColor":"none"}/><path d="M7 8h10M7 12h6M7 16h8" stroke={on?"white":"currentColor"} strokeWidth="1.4" strokeLinecap="round"/></svg>;
+const CI = ()=><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#185FA5" strokeWidth="1.4"/><path d="M3 9h18" stroke="#185FA5" strokeWidth="1.4"/><path d="M8 2v4M16 2v4" stroke="#185FA5" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+const PlusI = ()=><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>;
+
+// MINI CALENDAR
+function MiniCal({selected,onSelect}){
+  const [vy,setVy]=useState(2025);
+  const [vm,setVm]=useState(3);
+  const mn=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  const dl=['L','M','M','G','V','S','D'];
+  const fd=new Date(vy,vm,1).getDay();
+  const off=fd===0?6:fd-1;
+  const dim=new Date(vy,vm+1,0).getDate();
+  const cells=[]; for(let i=0;i<off;i++) cells.push(null); for(let d=1;d<=dim;d++) cells.push(d);
+  const prev=()=>vm===0?(setVm(11),setVy(y=>y-1)):setVm(m=>m-1);
+  const next=()=>vm===11?(setVm(0),setVy(y=>y+1)):setVm(m=>m+1);
+  const isSel=d=>selected&&selected.getDate()===d&&selected.getMonth()===vm&&selected.getFullYear()===vy;
+  const isToday=d=>TODAY.getDate()===d&&TODAY.getMonth()===vm&&TODAY.getFullYear()===vy;
+  const isPast=d=>new Date(vy,vm,d)<TODAY;
+  return(
+    <div className="mc" style={{boxShadow:'0 4px 20px rgba(0,0,0,.12)'}}>
+      <div className="cn"><button onClick={prev}>‹</button><span>{mn[vm]} {vy}</span><button onClick={next}>›</button></div>
+      <div className="cg2" style={{marginBottom:4}}>{dl.map((l,i)=><div key={i} className="cdl">{l}</div>)}</div>
+      <div className="cg2">{cells.map((d,i)=>d===null?<div key={i}/>:(
+        <button key={i} className={`cd${isSel(d)?' sel':isToday(d)?' tod':''}`}
+          disabled={isPast(d)} onClick={()=>onSelect(new Date(vy,vm,d))}>{d}</button>
+      ))}</div>
+    </div>
+  );
+}
+
+// TIME SCROLL
+function TimeScroll({selected,onSelect}){
+  const slots=[];
+  for(let h=9;h<=18;h++){slots.push(`${String(h).padStart(2,'0')}:00`);if(h<18)slots.push(`${String(h).padStart(2,'0')}:30`);}
+  const ref=useRef();
+  useEffect(()=>{if(selected&&ref.current){const i=slots.indexOf(selected);if(i>=0)ref.current.scrollTop=i*37;}},[]);
+  return(
+    <div className="tsw" style={{boxShadow:'0 4px 20px rgba(0,0,0,.12)'}}>
+      <div className="tsh"><button onClick={()=>onSelect(null)}>✕ Rimuovi orario</button></div>
+      <div className="tsc" ref={ref}>{slots.map(s=><div key={s} className={`tss${s===selected?' sel':''}`} onClick={()=>onSelect(s)}>{s}</div>)}</div>
+    </div>
+  );
+}
+
+// LOAD BADGE
+function LoadBadge({tasks,calEvents}){
+  const {label,lvl,pct,freeH}=calcLoad(tasks,calEvents);
+  const cfg=[
+    {bc:'var(--green)',c:'var(--green)',bg:'var(--green-bg)'},
+    {bc:'var(--scu)',c:'var(--scu)',bg:'var(--scu-bg)'},
+    {bc:'var(--amber)',c:'var(--amber)',bg:'var(--amber-bg)'},
+    {bc:'var(--red)',c:'var(--red)',bg:'var(--red-bg)'},
+  ][lvl];
+  return(
+    <div className="load-badge" title={`${pct}% fascia 09–18 · ${freeH}h libere`}
+      style={{borderColor:cfg.bc,color:cfg.c,background:cfg.bg}}>
+      <div className="load-dot" style={{background:cfg.c}}/>{label}
+    </div>
+  );
+}
+
+// ─── SUGGERIMENTI DINAMICI ───────────────────────────────────────────
+// Usa localStorage per tracciare frequenza e recency delle attività inserite.
+// Struttura chiave: 'flowday_history' → array di {text, area, count, lastUsed}
+// I suggerimenti mostrati sono i 3 più usati negli ultimi 30 giorni,
+// escluse le attività già completate oggi.
+
+const HISTORY_KEY = 'flowday_history';
+const HISTORY_DAYS = 30;
+const DEFAULT_SUGG = [
+  'circolare rimborso',
+  'riunione consiglio',
+  'verifiche classe',
+];
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveHistory(history) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {}
+}
+
+function recordActivity(text) {
+  if (!text || text.trim().length < 3) return;
+  const key = text.trim().toLowerCase();
+  const now = Date.now();
+  const history = loadHistory();
+  const existing = history.find(h => h.key === key);
+  if (existing) {
+    existing.count += 1;
+    existing.lastUsed = now;
+    existing.text = text.trim(); // preserve original casing
+  } else {
+    history.push({ key, text: text.trim(), count: 1, lastUsed: now });
+  }
+  // Pulisce voci più vecchie di HISTORY_DAYS
+  const cutoff = now - HISTORY_DAYS * 86400000;
+  const cleaned = history.filter(h => h.lastUsed > cutoff);
+  saveHistory(cleaned);
+}
+
+function getSuggestions(currentVal, completedToday) {
+  const history = loadHistory();
+  if (!history.length) return DEFAULT_SUGG;
+
+  const now = Date.now();
+  const cutoff = now - HISTORY_DAYS * 86400000;
+  const doneKeys = new Set((completedToday || []).map(t => t.name.trim().toLowerCase()));
+
+  // Filtra: recenti, non già fatte oggi, non uguali all'input corrente
+  const currentKey = (currentVal || '').trim().toLowerCase();
+  const candidates = history
+    .filter(h => h.lastUsed > cutoff)
+    .filter(h => !doneKeys.has(h.key))
+    .filter(h => !currentKey || !h.key.startsWith(currentKey))
+    .sort((a, b) => {
+      // Score: combina frequenza e recency (decay esponenziale su 7 giorni)
+      const decayA = Math.exp(-(now - a.lastUsed) / (7 * 86400000));
+      const decayB = Math.exp(-(now - b.lastUsed) / (7 * 86400000));
+      return (b.count * decayB) - (a.count * decayA);
+    })
+    .slice(0, 3)
+    .map(h => h.text);
+
+  // Se ne ha meno di 3, riempie con i default non già presenti
+  const result = [...candidates];
+  for (const d of DEFAULT_SUGG) {
+    if (result.length >= 3) break;
+    if (!result.some(r => r.toLowerCase().includes(d.toLowerCase()))) {
+      result.push(d);
+    }
+  }
+  return result.slice(0, 3);
+}
+
+// ADD PANEL
+function AddPanel({onClose,dispatch}){
+  const [step,setStep]=useState(0);
+  const [val,setVal]=useState('');
+  const [listening,setListening]=useState(false);
+  const [area,setArea]=useState('alt');
+  const [dateObj,setDateObj]=useState(new Date(TODAY));
+  const [time,setTime]=useState(null);
+  const [dur,setDur]=useState(null);
+  const [picker,setPicker]=useState(null);
+  const [pName,setPName]=useState('');
+  const [pArea,setPArea]=useState('alt');
+  const [pDl,setPDl]=useState(null);
+  const [pDlPicker,setPDlPicker]=useState(false);
+  const [pSteps,setPSteps]=useState([{name:'',date:'',time:''},{name:'',date:'',time:''}]);
+  const iRef=useRef();
+  const [sugg,setSugg]=useState(()=>getSuggestions('', []));
+
+  // Aggiorna suggerimenti mentre l'utente digita
+  const updateSugg = (v, doneTasks) => setSugg(getSuggestions(v, doneTasks));
+
+  const cycleArea=()=>{const ids=CATS.map(c=>c.id);setArea(ids[(ids.indexOf(area)+1)%ids.length]);};
+  const cycleDur=()=>{const i=DURS.indexOf(dur);setDur(DURS[(i+1)%DURS.length]);};
+  const fakeVoice=()=>{setListening(true);setVal('');setTimeout(()=>{setVal('ordine del giorno consiglio lunedì alle 10');setListening(false);iRef.current?.focus();},1400);};
+  const handleNext=()=>{if(!val.trim())return;const p=parseInput(val);setArea(p.area);setDateObj(p.dateObj);setTime(p.time||null);setDur(p.dur||null);setStep(2);};
+  const saveTsk=()=>{
+    recordActivity(val.trim());
+    dispatch({type:'ADD_TASK',name:val.trim(),area,dateObj,time,dur,note:''});
+  };
+  const saveProj=()=>{if(!pName.trim())return;dispatch({type:'ADD_PROJECT',name:pName.trim(),area:pArea,deadline:pDl,steps:pSteps});};
+  const addStep=()=>setPSteps(s=>[...s,{name:'',date:'',time:''}]);
+  const rmStep=i=>setPSteps(s=>s.filter((_,j)=>j!==i));
+  const setF=(i,f,v)=>setPSteps(s=>s.map((x,j)=>j===i?{...x,[f]:v}:x));
+  const catO=cat(area);
+
+  // step 0: choice
+  if(step===0) return(
+    <><div className="ov" onClick={onClose}/>
+    <div className="pnl">
+      <div className="hdl"/>
+      <p style={{fontSize:13,color:'var(--text2)',marginBottom:14}}>Cosa vuoi aggiungere?</p>
+      <div className="type-grid">
+        <button className="type-btn" onClick={()=>{setStep(1);setTimeout(()=>iRef.current?.focus(),60);}}>
+          <span className="ti">✅</span><span className="tl">Attività</span><span className="ts2">Azione singola</span>
+        </button>
+        <button className="type-btn" onClick={()=>setStep(3)}>
+          <span className="ti">📁</span><span className="tl">Progetto</span><span className="ts2">Con step e scadenza</span>
+        </button>
+      </div>
+    </div></>
+  );
+
+  // step 1: activity text
+  if(step===1) return(
+    <><div className="ov" onClick={onClose}/>
+    <div className="pnl">
+      <div className="hdl"/>
+      <div className="ir">
+        <input ref={iRef} className="ti2" placeholder={listening?'Registrazione…':'Cosa devi fare?'}
+          value={val} onChange={e=>{setVal(e.target.value);updateSugg(e.target.value,[]);}} onKeyDown={e=>e.key==='Enter'&&handleNext()} autoFocus/>
+        <button className={`mic${listening?' rec':''}`} onClick={fakeVoice}><MI/></button>
+        <button className="sb" onClick={handleNext} disabled={!val.trim()}>Avanti →</button>
+      </div>
+      {sugg.length>0&&(
+        <div>
+          <div style={{fontSize:10,color:'var(--text3)',fontFamily:'var(--mono)',marginBottom:6,letterSpacing:'.08em'}}>
+            {loadHistory().length>0?'USATE DI RECENTE':'SUGGERIMENTI'}
+          </div>
+          <div className="chips">{sugg.map(s=><button key={s} className="chip" onClick={()=>{setVal(s);updateSugg(s,[]);setTimeout(()=>iRef.current?.focus(),10);}}>{s}</button>)}</div>
+        </div>
+      )}
+      <button className="bl" style={{padding:'8px 12px',fontSize:12}} onClick={()=>setStep(0)}>← Indietro</button>
+    </div></>
+  );
+
+  // step 2: activity confirm
+  if(step===2) return(
+    <><div className="ov" onClick={onClose}/>
+    <div className="pnl" style={{animation:'fadeUp .22s var(--ease) both'}}>
+      <div className="hdl"/>
+      <div className="tprev">"{val}"</div>
+      <div className="ic">
+        <div className="it">MODIFICA SE NECESSARIO</div>
+        <div className="irow">
+          <button className="ich ai" style={{background:catO.bg,borderColor:catO.color,color:catO.color,fontWeight:500}} onClick={cycleArea}>
+            <span style={{fontSize:14}}>{catO.icon}</span>{catO.label}
+          </button>
+          <div style={{position:'relative'}}>
+            <button className="ich ai" style={{background:'var(--surface2)'}} onClick={()=>setPicker(picker==='date'?null:'date')}>
+              📅 {fmtD(dateObj)||'Oggi'}
+            </button>
+            {picker==='date'&&<div style={{position:'absolute',bottom:'calc(100% + 7px)',left:0,zIndex:200}}><MiniCal selected={dateObj} onSelect={d=>{setDateObj(d);setPicker(null);}}/></div>}
+          </div>
+          <div style={{position:'relative'}}>
+            <button className={`ich${time?' ai':''}`} style={time?{background:'var(--surface2)'}:{}} onClick={()=>setPicker(picker==='time'?null:'time')}>
+              🕐 {time||'Orario'}
+            </button>
+            {picker==='time'&&<div style={{position:'absolute',bottom:'calc(100% + 7px)',left:0,zIndex:200}}><TimeScroll selected={time} onSelect={t=>{setTime(t);setPicker(null);}}/></div>}
+          </div>
+          <button className={`ich${dur?' ai':''}`} style={dur?{background:'var(--surface2)'}:{}} onClick={cycleDur}>
+            ⏱ {dur||'Durata'}
+          </button>
+        </div>
+      </div>
+      <div className="hint">✦ inferito automaticamente — tocca per modificare</div>
+      <div className="cr">
+        <button className="bl" onClick={()=>setStep(1)}>← Modifica</button>
+        <button className="cb2" onClick={saveTsk}>Salva attività</button>
+      </div>
+    </div></>
+  );
+
+  // step 3: project form
+  return(
+    <><div className="ov" onClick={onClose}/>
+    <div className="pnl scroll-pnl">
+      <div className="hdl"/>
+      <div className="fl">
+        <label>NOME PROGETTO</label>
+        <input className="fi" placeholder="Es. Tesi, Bilancio 2025, Campagna…" value={pName} onChange={e=>setPName(e.target.value)} autoFocus/>
+      </div>
+      <div className="fl">
+        <label>CATEGORIA</label>
+        <div className="cg">{CATS.map(c=>(
+          <button key={c.id} className="cb"
+            style={pArea===c.id?{background:c.bg,borderColor:c.color,color:c.color}:{color:'var(--text2)'}}
+            onClick={()=>setPArea(c.id)}>
+            <div style={{fontSize:18,marginBottom:3}}>{c.icon}</div><div>{c.label}</div>
+          </button>
+        ))}</div>
+      </div>
+      <div className="fl">
+        <label>SCADENZA (opzionale)</label>
+        <div style={{position:'relative'}}>
+          <button className="ich" style={{width:'100%',justifyContent:'flex-start',borderRadius:'var(--r)',background:'var(--surface2)'}}
+            onClick={()=>setPDlPicker(!pDlPicker)}>
+            📅 {pDl?fmtD(pDl):'Nessuna scadenza'}
+          </button>
+          {pDlPicker&&<div style={{position:'absolute',top:'calc(100% + 7px)',left:0,zIndex:200}}><MiniCal selected={pDl} onSelect={d=>{setPDl(d);setPDlPicker(false);}}/></div>}
+        </div>
+      </div>
+      <div className="fl">
+        <label>STEP</label>
+        {pSteps.map((s,i)=>(
+          <div key={i} className="sir">
+            <input className="si2" placeholder={`Step ${i+1}…`} value={s.name} onChange={e=>setF(i,'name',e.target.value)}/>
+            <input className="sd" type="date" value={s.date||''} onChange={e=>setF(i,'date',e.target.value)}/>
+            <button className="rm" onClick={()=>rmStep(i)}>×</button>
+          </div>
+        ))}
+        <div className="ar" onClick={addStep}><PlusI/> Aggiungi step</div>
+      </div>
+      <div className="cr">
+        <button className="bl" onClick={()=>setStep(0)}>← Indietro</button>
+        <button className="cb2" onClick={saveProj} disabled={!pName.trim()}>Crea progetto</button>
+      </div>
+    </div></>
+  );
+}
+
+// TOAST
+function Toast({msg,onDismiss}){
+  const c=cat(msg.area);
+  const det=[msg.date,msg.time?`alle ${msg.time}`:null].filter(Boolean).join(' · ');
+  return(
+    <div className="toast">
+      <div className="tl2">
+        {msg.isProj?'Progetto creato':'Salvato'}
+        <span className="talbl" style={{background:c.bg,color:c.color}}>{c.label}</span>
+        {det&&<span style={{color:'var(--text3)',marginLeft:5,fontSize:11,fontFamily:'var(--mono)'}}>{det}</span>}
+      </div>
+      <span className="te" onClick={onDismiss}>Ok</span>
+    </div>
+  );
+}
+
+// ICAL MODAL
+function ICalModal({url,onUrl,onSave,onClose}){
+  return(
+    <div className="mw" onClick={onClose}>
+      <div className="mo" onClick={e=>e.stopPropagation()}>
+        <div className="hdl"/>
+        <div style={{fontSize:17,fontWeight:500,marginBottom:6}}>Collega iCal Apple</div>
+        <div style={{fontSize:13,color:'var(--text2)',marginBottom:18,lineHeight:1.5}}>
+          Su Mac: Calendario → tasto destro sul calendario → <strong>Condividi calendario</strong> → attiva <strong>Pubblico</strong> → copia link webcal://
+        </div>
+        <input className="fi" placeholder="webcal://p12-caldav.icloud.com/..." value={url} onChange={e=>onUrl(e.target.value)}
+          style={{marginBottom:14,fontFamily:'var(--mono)',fontSize:12}}/>
+        <button style={{width:'100%',background:'var(--text)',color:'#fff',border:'none',borderRadius:'var(--r)',padding:13,fontSize:15,fontWeight:500,fontFamily:'var(--font)',cursor:'pointer',marginBottom:8}} onClick={onSave}>Connetti calendario</button>
+        <button style={{width:'100%',background:'none',border:'none',fontSize:14,color:'var(--text2)',cursor:'pointer',fontFamily:'var(--font)',padding:8}} onClick={onClose}>Annulla</button>
+      </div>
+    </div>
+  );
+}
+
+// TASK CARD (expandable with note)
+function TaskCard({t,dispatch}){
+  const [expanded,setExpanded]=useState(false);
+  const [editNote,setEditNote]=useState(false);
+  const [noteVal,setNoteVal]=useState(t.note||'');
+  const saveNote=()=>{dispatch({type:'SET_NOTE',id:t.id,note:noteVal});setEditNote(false);};
+  return(
+    <div className={`tc${t.done?' done':''} fu3`}>
+      <div onClick={()=>dispatch({type:'TOGGLE_TASK',id:t.id})} style={{cursor:'pointer',marginTop:2,flexShrink:0}}>
+        <div style={{width:20,height:20,borderRadius:'50%',border:t.done?'1.5px solid var(--green)':'1.5px solid var(--border-s)',display:'flex',alignItems:'center',justifyContent:'center',background:t.done?'var(--green)':'transparent',transition:'all .2s'}}>
+          <ChkI/>
+        </div>
+      </div>
+      <div className="tb" style={{flex:1,minWidth:0}}>
+        <div style={{display:'flex',alignItems:'flex-start',gap:6,cursor:'pointer'}} onClick={()=>setExpanded(!expanded)}>
+          <div className="tn" style={{flex:1}}>{t.name}</div>
+          <span style={{fontSize:11,color:'var(--text3)',marginTop:2,flexShrink:0}}>{expanded?'▲':'▼'}</span>
+        </div>
+        <div className="tf">
+          <span className={`at tag-${t.area}`}>{cat(t.area).label}</span>
+          {t.time&&<span className="tsb">{t.time}</span>}
+          {t.durMin&&<span className="tsb">{t.durMin<60?`${t.durMin} min`:`${Math.floor(t.durMin/60)}h`}</span>}
+          {t.note&&!expanded&&<span style={{fontSize:11,color:'var(--text3)',fontStyle:'italic',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:120}}>📝</span>}
+        </div>
+        {expanded&&(
+          <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border)'}}>
+            {editNote?(
+              <div style={{display:'flex',gap:6}}>
+                <textarea className="fi" value={noteVal} onChange={e=>setNoteVal(e.target.value)}
+                  placeholder="Aggiungi una nota…" autoFocus
+                  style={{fontSize:13,resize:'none',height:64,padding:'8px 10px'}}/>
+                <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                  <button className="sb" style={{padding:'6px 10px',fontSize:12}} onClick={saveNote}>✓</button>
+                  <button className="bl" style={{padding:'6px 10px',fontSize:12}} onClick={()=>setEditNote(false)}>✕</button>
+                </div>
+              </div>
+            ):(
+              <div style={{display:'flex',alignItems:'flex-start',gap:8,cursor:'pointer'}} onClick={()=>setEditNote(true)}>
+                <span style={{fontSize:13,color:t.note?'var(--text2)':'var(--text3)',flex:1,lineHeight:1.4,fontStyle:t.note?'normal':'italic'}}>
+                  {t.note||'+ Aggiungi nota…'}
+                </span>
+                {t.note&&<span style={{fontSize:11,color:'var(--text3)'}}>modifica</span>}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// HOME
+function Home({state,dispatch}){
+  const {tasks,calEvents,overdue,projects,panelOpen,toastMsg}=state;
+  const todayT=tasks.filter(t=>t.date instanceof Date&&t.date.toDateString()===TODAY.toDateString());
+  const done=todayT.filter(t=>t.done).length;
+  return(
+    <>
+    <div className="scroll">
+      <div className="topbar fu">
+        <div><div className="greeting">Buongiorno</div><div className="dateline">Venerdì 4 aprile · {todayT.length-done} attività rimaste</div></div>
+        <LoadBadge tasks={tasks} calEvents={calEvents}/>
+      </div>
+      {!state.icalUrl?(
+        <div className="ical-row fu1" onClick={()=>dispatch({type:'OPEN_ICAL'})}>
+          <div className="ical-ico"><CI/></div>
+          <div className="ical-info"><div className="ical-t">Collega calendario Apple</div><div className="ical-s">Sincronizza iCal per vedere impegni fissi</div></div>
+          <button className="ical-btn">Collega</button>
+        </div>
+      ):(
+        <div className="ical-row fu1" style={{cursor:'default'}}>
+          <div className="ical-ico"><CI/></div>
+          <div className="ical-info"><div className="ical-t">Calendario sincronizzato</div><div className="ical-s">iCal · aggiornato ora</div></div>
+          <span style={{fontSize:12,color:'var(--green)',fontWeight:500}}>✓ Live</span>
+        </div>
+      )}
+      <div className="sec">
+        <div className="sec-lbl fu1">OGGI IN CALENDARIO</div>
+        {calEvents.map((e,i)=>(
+          <div key={e.id} className={`cal-item fu${i+2}`}
+            style={e.personal?{opacity:.6,borderStyle:'dashed'}:{}}
+            onClick={()=>dispatch({type:'TOGGLE_CAL_PERSONAL',id:e.id})}>
+            <span className="cal-time">{e.time}</span>
+            <span className="cal-dot" style={e.personal?{background:'var(--text3)'}:{}}/>
+            <span className="cal-name" style={{flex:1}}>{e.name}</span>
+            {e.personal&&(
+              <span style={{fontSize:10,color:'var(--text3)',fontFamily:'var(--mono)',marginRight:4}}>
+                personale{!e.manualOverride&&<span style={{opacity:.5}}> · auto</span>}
+              </span>
+            )}
+            <span className="cal-dur">{e.dur>=60?`${Math.floor(e.dur/60)}h${e.dur%60?` ${e.dur%60}min`:''}`:e.dur+'min'}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{padding:'0 16px',marginBottom:16}}>
+        <p style={{fontSize:11,color:'var(--text3)',fontFamily:'var(--mono)'}}>
+          tocca un evento per cambiare se conta nel carico · classificazione automatica
+        </p>
+      </div>
+      {overdue.length>0&&(
+        <div className="sec">
+          <div className="sec-lbl fu2">IN RITARDO</div>
+          {overdue.map(t=><div key={t.id} className="alert fu2"><span className="alert-t">{t.name}</span><span className="alert-m">{t.since} · {cat(t.area).label}</span></div>)}
+        </div>
+      )}
+      <div className="sec">
+        <div className="sec-lbl fu3">DA FARE OGGI</div>
+        {todayT.map(t=>(
+          <TaskCard key={t.id} t={t} dispatch={dispatch}/>
+        ))}
+      </div>
+      <div className="sec">
+        <div className="sec-lbl fu4">PROGETTI ATTIVI</div>
+        {projects.map((p,i)=>{
+          const pct=calcPct(p.steps);const col=pctCol(pct,p.area);const dls=dlSt(p.deadline);
+          return(
+            <div key={p.id} className={`pc fu${4+i}`} onClick={()=>dispatch({type:'OPEN_PROJECT',id:p.id})}>
+              <div className="pt"><span className={`at tag-${p.area}`}>{cat(p.area).label}</span><span className="pn">{p.name}</span><span className="pp" style={{color:col}}>{pct}%</span></div>
+              <div className="bbg"><div className="bf" style={{width:`${pct}%`,background:col}}/></div>
+              <div className="pf">
+                <span className="psb">{p.steps.filter(s=>s.done).length}/{p.steps.length} step</span>
+                {p.deadline?<span className={`dlt dl-${dls}`}>Scade {fmtD(p.deadline)}</span>:<span className="dlt dl-ok">Aperto</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {toastMsg&&<div className="sec"><Toast msg={toastMsg} onDismiss={()=>dispatch({type:'CLEAR_TOAST'})}/></div>}
+    </div>
+    {!panelOpen&&<button className="fab" onClick={()=>dispatch({type:'TOGGLE_PANEL'})}><span style={{fontSize:20,lineHeight:1}}>+</span> Aggiungi</button>}
+    {panelOpen&&<AddPanel onClose={()=>dispatch({type:'CLOSE_PANEL'})} dispatch={dispatch}/>}
+    </>
+  );
+}
+
+// PROJECT NOTE
+function ProjNote({proj,dispatch}){
+  const [edit,setEdit]=useState(false);
+  const [val,setVal]=useState(proj.note||'');
+  const save=()=>{dispatch({type:'SET_PROJ_NOTE',id:proj.id,note:val});setEdit(false);};
+  return(
+    <div style={{padding:'0 16px',marginBottom:16}}>
+      {edit?(
+        <div style={{display:'flex',gap:6}}>
+          <textarea className="fi" value={val} onChange={e=>setVal(e.target.value)}
+            placeholder="Note sul progetto…" autoFocus
+            style={{fontSize:13,resize:'none',height:72,padding:'8px 10px'}}/>
+          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+            <button className="sb" style={{padding:'7px 11px',fontSize:13}} onClick={save}>✓</button>
+            <button className="bl" style={{padding:'7px 11px',fontSize:13}} onClick={()=>setEdit(false)}>✕</button>
+          </div>
+        </div>
+      ):(
+        <div onClick={()=>setEdit(true)} style={{cursor:'pointer',padding:'10px 13px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:'var(--r)'}}>
+          <span style={{fontSize:13,color:proj.note?'var(--text2)':'var(--text3)',lineHeight:1.4,fontStyle:proj.note?'normal':'italic'}}>
+            {proj.note||'+ Aggiungi nota al progetto…'}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// PROJECT DETAIL
+function ProjDetail({proj,onBack,dispatch}){
+  const pct=calcPct(proj.steps);const col=pctCol(pct,proj.area);const dls=dlSt(proj.deadline);
+  const c=cat(proj.area);
+  const [newS,setNewS]=useState('');const [adding,setAdding]=useState(false);
+  const save=()=>{if(!newS.trim())return;dispatch({type:'ADD_STEP',pid:proj.id,name:newS.trim(),date:null,time:null});setNewS('');setAdding(false);};
+  return(
+    <div className="scroll">
+      <div className="dh fu"><button className="bk" onClick={onBack}><BkI/></button><div className="dt">{proj.name}</div></div>
+      <div className="bpw fu1">
+        <div className="bpr"><span className="bp" style={{color:col}}>{pct}%</span><span className="bpl">completato</span></div>
+        <div className="bbgt"><div className="bbf" style={{width:`${pct}%`,background:col}}/></div>
+      </div>
+      <div className="pm fu2">
+        <span className={`at tag-${proj.area}`}>{c.label}</span>
+        {proj.deadline?<span className={`dlt dl-${dls}`}>Scade {fmtD(proj.deadline)}</span>:<span className="dlt dl-ok">Progetto aperto</span>}
+        <span className="psb" style={{marginLeft:'auto'}}>{proj.steps.filter(s=>s.done).length}/{proj.steps.length} step</span>
+      </div>
+      <ProjNote proj={proj} dispatch={dispatch}/>
+      <div className="ss">
+        <div className="sec-lbl fu3">STEP</div>
+        {proj.steps.map((s,i)=>(
+          <div key={s.id} className={`si fu${Math.min(3+i,6)}${s.done?' ds':''}`} onClick={()=>dispatch({type:'TOGGLE_STEP',pid:proj.id,sid:s.id})}>
+            <div className={`sc${s.done?' on':''}`} style={s.done?{background:c.color,borderColor:c.color}:{}}><ChkI/></div>
+            <div className="sbd">
+              <div className="sn">{s.name}</div>
+              {(s.date||s.time)&&<div className="sm">{fmtD(s.date)}{s.time?` · ${s.time}`:''}</div>}
+            </div>
+          </div>
+        ))}
+        {adding?(
+          <div className="sir" style={{marginTop:6}}>
+            <input className="si2" placeholder="Nome step…" autoFocus value={newS} onChange={e=>setNewS(e.target.value)} onKeyDown={e=>e.key==='Enter'&&save()}/>
+            <button className="sb" style={{padding:'8px 12px',fontSize:13}} onClick={save}>+</button>
+            <button className="rm" onClick={()=>setAdding(false)}>×</button>
+          </div>
+        ):<button className="asb" onClick={()=>setAdding(true)}>+ Aggiungi step</button>}
+      </div>
+    </div>
+  );
+}
+
+// PROJECTS LIST
+function ProjList({projects,dispatch}){
+  return(
+    <div className="scroll">
+      <div className="topbar fu"><div><div className="greeting">Progetti</div><div className="dateline">{projects.length} attivi</div></div></div>
+      <div className="sec">{projects.map((p,i)=>{
+        const pct=calcPct(p.steps);const col=pctCol(pct,p.area);const dls=dlSt(p.deadline);
+        return(
+          <div key={p.id} className={`pc fu${i+1}`} onClick={()=>dispatch({type:'OPEN_PROJECT',id:p.id})}>
+            <div className="pt"><span className={`at tag-${p.area}`}>{cat(p.area).label}</span><span className="pn">{p.name}</span><span className="pp" style={{color:col}}>{pct}%</span></div>
+            <div className="bbg"><div className="bf" style={{width:`${pct}%`,background:col}}/></div>
+            <div className="pf"><span className="psb">{p.steps.filter(s=>s.done).length}/{p.steps.length} step</span>
+              {p.deadline?<span className={`dlt dl-${dls}`}>Scade {fmtD(p.deadline)}</span>:<span className="dlt dl-ok">Aperto</span>}
+            </div>
+          </div>
+        );
+      })}</div>
+    </div>
+  );
+}
+
+// APP
+function App(){
+  const [state,dispatch]=useReducer(reducer,INIT);
+  const {screen,activeProject,projects,panelOpen,icalModal,icalUrl}=state;
+  const proj=projects.find(p=>p.id===activeProject);
+  const handleICalSave=()=>dispatch({type:'SAVE_ICAL',events:[{id:'ic1',name:'Evento da iCal',time:'16:00',dur:60}]});
+  return(
+    <div className="phone">
+      {screen==='home'&&<Home state={state} dispatch={dispatch}/>}
+      {screen==='project'&&proj&&<ProjDetail proj={proj} onBack={()=>dispatch({type:'BACK_HOME'})} dispatch={dispatch}/>}
+      {screen==='projects'&&<ProjList projects={projects} dispatch={dispatch}/>}
+      {!panelOpen&&(
+        <nav className="bnav">
+          <div className={`ni${screen==='home'?' on':''}`} onClick={()=>dispatch({type:'SET_SCREEN',screen:'home'})}>
+            <HI on={screen==='home'}/><span>Oggi</span>{screen==='home'&&<div className="nd"/>}
+          </div>
+          <div className={`ni${screen==='projects'||screen==='project'?' on':''}`} onClick={()=>dispatch({type:'SET_SCREEN',screen:'projects'})}>
+            <PI on={screen==='projects'||screen==='project'}/><span>Progetti</span>
+            {(screen==='projects'||screen==='project')&&<div className="nd"/>}
+          </div>
+        </nav>
+      )}
+      {icalModal&&<ICalModal url={icalUrl} onUrl={u=>dispatch({type:'SET_ICAL_URL',url:u})} onSave={handleICalSave} onClose={()=>dispatch({type:'CLOSE_ICAL'})}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
